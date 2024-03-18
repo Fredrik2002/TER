@@ -5,19 +5,12 @@
 #include <vector>
 #include <algorithm>
 #include "branch_and_bound.h"
+#include "backtracking.h"
 #include <bits/stdc++.h>
 
 using namespace std;
 
-int calcule_poids(vector<Arete*> &aretes){
-    int somme = 0;
-    for(Arete* a : aretes){
-        somme += a->poids;
-    }
-    return somme;
-}
-
-vector<Arete*>* glouton1(int N, vector<Arete*> &aretes, int x0){//Liste d'arêtes TRIEE
+double glouton1(int N, vector<Arete*> &aretes, int x0){//Liste d'arêtes TRIEE
     vector<Arete*>* solution = new vector<Arete*>;
     unordered_set<int> sommet_explores;
     sommet_explores.insert(x0);
@@ -43,25 +36,20 @@ vector<Arete*>* glouton1(int N, vector<Arete*> &aretes, int x0){//Liste d'arête
         Arete* a = aretes.at(i);
         if(a->sommet1==x0 && a->sommet2==sommet_actuel){
             solution->push_back(a);
-            return solution;
+            return valeur_solution(*solution);
         }
         if(a->sommet2==x0 && a->sommet1==sommet_actuel){
             solution->push_back(a);
-            return solution;
+            return valeur_solution(*solution);
         }
     }
 }
 
-vector<Arete*>* glouton2(int N, vector<Arete*> &aretes){
-    vector<Arete*>* solution = new vector<Arete*>();
-    vector<Arete*>* s = new vector<Arete*>();
-    solution =glouton1(N, aretes, 0);
-    int score = calcule_poids(*solution);
+double glouton2(int N, vector<Arete*> &aretes){
+    double solution = glouton1(N, aretes, 0);
     for(int x0=1;x0<N;x0++){
-        
-        s = glouton1(N, aretes, x0);
-        if (calcule_poids(*s) < score){
-            score = calcule_poids(*s);
+        double s = glouton1(N, aretes, x0);
+        if (s < solution){
             solution = s;
         }
     }

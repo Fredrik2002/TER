@@ -189,62 +189,46 @@ vector<int> sommet_a_separer(int N, Noeud &n){//Renvoie les arêtes à retirer
     return aretes_a_brancher;
 }
 
-Noeud selection_noeud(vector<Noeud> &liste){ // Strategie de parcours, voir fonction de tri des noeuds
-    //sort(liste.begin(), liste.end());
-    Noeud n = liste.at(0);
-    liste.erase(liste.begin());
-    return n;
-}
-
 void insertion_dichotomique(vector<Noeud> &liste, Noeud &n){
     auto it = lower_bound(liste.begin(), liste.end(), n);
     liste.insert(it, n);
 }
 
-tuple<vector<Arete>*, int> branch_and_bound(int N, Arete* &aretes, double borne_sup=13245678){
-    tuple<vector<Arete>*, int> to_return;
+void branch_and_bound_profondeur(Noeud &n, int N, Arete* &aretes, double &borne_sup, int &nb_noeuds_explores, 
+                unordered_set<string> &set){
+    nb_noeuds_explores++;
+    vector<int> branchement = sommet_a_separer(N, n);
+    vector<Noeud> liste_noeuds;
+    for(int a : branchement){
+        Noeud n_fils(n, a);
+        if(n_fils.solution[N-3]!=-1 && set.find(n_fils.hashcode)==set.end() && n_fils.evaluation<borne_sup){
+            set.insert(n_fils.hashcode); 
+            if(n_fils.solution_realisable){
+                borne_sup=n_fils.evaluation;
+            }
+            else{
+                insertion_dichotomique(liste_noeuds,n_fils);
+            }
+        }
+    }
+    for(int i=0;i<liste_noeuds.size();i++){
+        branch_and_bound_profondeur(liste_noeuds.at(i), N, aretes, borne_sup, nb_noeuds_explores, set);
+    }
+}
+
+tuple<double, int> lance_profondeur(int N, Arete* &aretes, double borne_sup=13245678){
+    tuple<double, int> to_return;
     int x0 = 0;
     int nb_noeuds_explores = 0;
-    int maxsize = 0;
     unordered_set<string> set;
-    vector<Noeud> liste_noeuds;
     borne_sup+=0.0001;
-    //borne_sup=12345678;
     Noeud n(aretes, N, x0);
     n.evalue();
-    liste_noeuds.push_back(n);
-    while(liste_noeuds.size()>0){
-        n = selection_noeud(liste_noeuds);
-        nb_noeuds_explores++;
-        if(n.solution_realisable){//Solution réalisable
-            cout << "Nb noeuds " << nb_noeuds_explores <<endl;
-            vector<Arete>* s = new vector<Arete>();
-            for(int i=0;i<N;i++){
-                s->push_back(aretes[n.solution[i]]);
-            }
-            to_return = make_tuple(s, nb_noeuds_explores);
-            return to_return;
-            
-        }
-        vector<int> branchement = sommet_a_separer(N, n);
-        for(int a : branchement){
-            Noeud n_fils(n, a);
-            if(n_fils.solution[N-3]!=-1 && set.find(n_fils.hashcode)==set.end() && n_fils.evaluation<borne_sup){
-                if(n_fils.solution_realisable){
-                    borne_sup=n_fils.evaluation;
-                    auto it = lower_bound(liste_noeuds.begin(), liste_noeuds.end(), n_fils);
-                    liste_noeuds.erase(it, liste_noeuds.end());
-                    liste_noeuds.push_back(n_fils);
-                }
-                else{
-                    insertion_dichotomique(liste_noeuds,n_fils);
-                }
-                set.insert(n_fils.hashcode); 
-            }
-        }
-        
-    }
-    cout << "Plus de noeuds" << endl;
+    if(n.solution_realisable) borne_sup=n.evaluation;
+    branch_and_bound_profondeur(n, N, aretes, borne_sup, nb_noeuds_explores, set);
+    return make_tuple(borne_sup, nb_noeuds_explores);
 }
+
+
 
 #endif

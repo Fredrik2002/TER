@@ -72,7 +72,7 @@ int* meilleure_solution, double &meilleur_score, bool* contient){
         }
     }
 
-vector<Arete*>* backtracking(int N, vector<Arete*> &aretes){
+double backtracking(int N, vector<Arete*> &aretes){
     double* distances = matrice_distance(N, aretes);
     vector<Arete*>* s = new vector<Arete*>();
     int solution_finale[N];
@@ -90,7 +90,7 @@ vector<Arete*>* backtracking(int N, vector<Arete*> &aretes){
         s->push_back(new Arete(solution_finale[i], solution_finale[i+1], distances[solution_finale[i]*N+solution_finale[i+1]],1));
     }
     s->push_back(new Arete(solution_finale[0], solution_finale[N-1], distances[solution_finale[0]*N+solution_finale[N-1]], 1));
-    return s;
+    return valeur_solution(*s);
 }
 
 #endif

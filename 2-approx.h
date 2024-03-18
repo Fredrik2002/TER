@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include "branch_and_bound.h"
+#include "backtracking.h"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -34,14 +35,14 @@ vector<Arete*> kruskal(int N, vector<Arete*> &aretes, int x0){//Prend en paramè
     else return solution_vide;
 }
 
-vector<Arete*>* deux_approx(int N, vector<Arete*> &aretes){
+double deux_approx(int N, vector<Arete*> &aretes){
     vector<Arete*> * solution = new vector<Arete*>();
     vector<Arete*> ACPM = kruskal(N+1, aretes, -1);
     for(Arete* a : ACPM){
         solution->push_back(a);
         solution->push_back(a);
     }
-    return solution;
+    return valeur_solution(*solution);
 }
 
 #endif

@@ -45,8 +45,17 @@ vector<Arete*> * couplage_parfait(int N, vector<int> &sommets, double* distances
         aretes_du_matching->push_back(new Arete(sommets.at(matching->at(i)), 
         sommets.at(matching->at(i+1)), distances[sommets.at(matching->at(i))*N+sommets.at(matching->at(i+1))], 1));
     }
-    return aretes_du_matching;
-    
+    return aretes_du_matching; 
+}
+
+int sommet_a_utiliser(vector<Arete*> &ACPM, vector<int> &circuit){
+    for(int i=0;i<circuit.size();i++){
+        int s = circuit.at(i);
+        for(Arete *a : ACPM){
+            if(a->sommet1 ==s || a->sommet2 == s) return s;
+        }
+    }
+    return -1;
 }
 
 vector<int> circuit_eulerien(vector<Arete*> &ACPM){
@@ -59,9 +68,9 @@ vector<int> circuit_eulerien(vector<Arete*> &ACPM){
             if(it==circuit.end()) circuit.insert(circuit.begin(), boucle.begin(), boucle.end());
             else circuit.insert(it, boucle.begin(), boucle.end()-1);
             if(ACPM.size()==0) break;
+            sommet_actuel = sommet_a_utiliser(ACPM, circuit);
             boucle.clear();
-            boucle.push_back(ACPM.at(0)->sommet1);
-            sommet_actuel = ACPM.at(0)->sommet1;
+            boucle.push_back(sommet_actuel);
             continue;
         }
         for(int i=0;i<ACPM.size();i++){
@@ -98,7 +107,7 @@ void shortcut(int N, vector<int> &circuit){
     circuit.erase(circuit.begin()+N, circuit.end()-1);
 }
 
-vector<Arete*>* christofides(int N, vector<Arete*> &aretes){
+double christofides(int N, vector<Arete*> &aretes){
     double* distances = matrice_distance(N, aretes);
     vector<Arete*> * solution = new vector<Arete*>();
     vector<Arete*> ACPM = kruskal(N+1, aretes, -1);
@@ -110,10 +119,10 @@ vector<Arete*>* christofides(int N, vector<Arete*> &aretes){
     }
     vector<int> circ = circuit_eulerien(ACPM);
     shortcut(N, circ);
-    for(int i=0;i<N-1;i++){
+    for(int i=0;i<N;i++){
         solution->push_back(new Arete(circ.at(i), circ.at(i+1), distances[circ.at(i)*N+circ.at(i+1)], 1));
     }
-    return solution;
+    return valeur_solution(*solution);
 }
 
 #endif

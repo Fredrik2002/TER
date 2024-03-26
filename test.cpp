@@ -3,12 +3,14 @@
 #include <string>
 #include <cmath>
 #include <ctime>
+#include <chrono>
 #include <bits/stdc++.h>
 
 #include "christofides.h"
 #include "backtracking.h"
 #include "branch_and_bound2.h"
 #include "glouton.h"
+#include "held-karp.h"
 
 
 
@@ -56,6 +58,7 @@ double (*distance)(int, int, int, int)){
 }
 
 int main(){
+    srand(time(NULL));
     ifstream fin;
 
     string line, str;
@@ -73,12 +76,8 @@ int main(){
         aretes.push_back(new Arete((int) H[0], (int) H[1], H[2], i/3-1)); 
     }
     sort(aretes.begin(), aretes.end(), comparateur_pointeur);
-    int N = 18;
+    int N = 14;
     int m = N*(N-1)/2;
-    double somme=0;
-
-    aretes = genere_instances(N, 100, 100, distance_de_manhattan);
-
 
     for(int i=0;i<1;i++){
         Arete* aretes2 = new Arete[m];
@@ -90,13 +89,48 @@ int main(){
         Noeud2::N = N;
         Noeud2::m = m;
         Noeud2::distances = matrice;
-        int x;
+        Noeud2::two_lightest = lightest_two_weights(N, matrice);
+
+        double g1 = glouton1(N, aretes, 0);
+        double g2 = glouton2(N, aretes);
+        double approx1 = deux_approx(N, aretes);
+        double approx2 = christofides(N, aretes);
+
+        double best_approx = (g2<approx2) ? g2 : approx2;
         
-        vector<Arete*>* g2 = new vector<Arete*>();
-        g2 = glouton2(N, aretes);
-        cin >> x;
-        tuple<double, int> couple = lance_profondeur3(N, matrice, valeur_solution(*g2));
-        cin >> x;
+        clock_t startTime = clock();
+        cout << "Start Backtracking" << endl;
+        double backtrck = backtracking(N, aretes);
+        double t1 = (double (clock()-startTime))/1000;
+        cout << round(t1)/1000 << "s " <<endl;
+        
+        startTime = clock();
+        cout << "Start B&B1" << endl;
+        tuple<double, int> couple; //= lance_profondeur(N, aretes2, best_approx);
+        double t2 = (double (clock()-startTime))/1000;
+        double s1 = get<0>(couple);
+        int nb_noeuds = get<1>(couple);
+        cout << round(t2)/1000 << "s, "<<nb_noeuds<<" noeuds "<<endl;
+        
+        this_thread::sleep_for(chrono::nanoseconds(10));
+
+        startTime = clock();
+        cout << "Start B&B2" << endl;
+        tuple<double, int> couple2 = lance_profondeur3(N, matrice, best_approx);
+        double t3 = (double (clock()-startTime))/1000;
+        int nb_noeuds2 = get<1>(couple2);
+        cout <<round(t3)/1000 <<"s, "<<nb_noeuds2<<" noeuds "<<endl;
+        double s2 = get<0>(couple2);
+        
+
+        startTime = clock();
+        cout << "Start Prog dyn" << endl;
+        vector<vector<int>> state(N);
+        for(auto & neighbors : state)
+            neighbors = vector<int>((1 << N) - 1, 100000);
+        double h_k = held_karp(N, matrice, 0,1, state);
+        double t4 = (double (clock()-startTime))/1000;
+        cout << " " << round(t4)/1000 <<"s, "<< endl;
     }
     
     // Close the file

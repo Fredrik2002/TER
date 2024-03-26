@@ -43,6 +43,7 @@ double glouton1(int N, vector<Arete*> &aretes, int x0){//Liste d'arêtes TRIEE
             return valeur_solution(*solution);
         }
     }
+    return -1;
 }
 
 double glouton2(int N, vector<Arete*> &aretes){

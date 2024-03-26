@@ -72,7 +72,7 @@ int main(){
 */
 
     int i=0;
-    int N=13;
+    int N=20;
     int m = N*(N-1)/2;
     Noeud2::N = N;
     Noeud2::m = m;
@@ -87,10 +87,11 @@ int main(){
     my_file_approx << N << "\n";
     my_file_exacte << N << "\n";
     Arete* aretes2 = new Arete[m];
-    while(i<100){
+    while(i<10){
         vector<Arete*> aretes = genere_instances(N, 100, 100, distance_de_manhattan);
         double* matrice = matrice_distance(N, aretes);
         Noeud2::distances = matrice;
+        Noeud2::two_lightest = lightest_two_weights(N, matrice);
         for(int i=0;i<m;i++){
             aretes2[i] = *(aretes.at(i));
         }
@@ -100,15 +101,18 @@ int main(){
         double approx1 = deux_approx(N, aretes);
         double approx2 = christofides(N, aretes);
 
+        double best_approx = (g2<approx2) ? g2 : approx2;
+        
+
         //SOLUTIONS EXACTES
         
         clock_t startTime = clock();
-        double backtrck = backtracking(N, aretes);
+        double backtrck = 0;//backtracking(N, aretes);
         double t1 = (double (clock()-startTime))/1000;
-        //cout << t1 << "s ";
+        cout << t1 << "s ";
         
         startTime = clock();
-        tuple<double, int> couple = lance_profondeur(N, aretes2);
+        tuple<double, int> couple = lance_profondeur(N, aretes2, best_approx);
         double t2 = (double (clock()-startTime))/1000;
         double s1 = get<0>(couple);
         int nb_noeuds = get<1>(couple);
@@ -116,16 +120,20 @@ int main(){
         
 
         startTime = clock();
-        tuple<double, int> couple2 = lance_profondeur3(N, matrice, g2);
+        tuple<double, int> couple2;// = lance_profondeur3(N, matrice, best_approx);
         double t3 = (double (clock()-startTime))/1000;
-        int nb_noeuds2 = get<1>(couple);
-        cout <<t3 <<"s, "<<nb_noeuds2<<" noeuds "<< endl;
-        double s2 = get<0>(couple);
+        int nb_noeuds2 = get<1>(couple2);
+        cout <<t3 <<"s, "<<nb_noeuds2<<" noeuds ";
+        double s2 = get<0>(couple2);
         
 
         startTime = clock();
-        double held_karp = 0;
+        vector<vector<int>> state(N);
+        for(auto & neighbors : state)
+            neighbors = vector<int>((1 << N) - 1, 100000);
+        double h_k = 0;//held_karp(N, matrice, 0,1, state);
         double t4 = (double (clock()-startTime))/1000;
+        cout << " " << t4 <<"s, "<< endl;
 
         if(false){
             
@@ -137,7 +145,7 @@ int main(){
             cout << "Branch & Bound 2 :" << s2<<endl;
         }
         else{
-            //my_file_approx<<backtrck<<"," << g1 <<","<<g2<<","<< approx1<<","<<approx2<<"\n";
+            my_file_approx<<backtrck<<"," << g1 <<","<<g2<<","<< approx1<<","<<approx2<<"\n";
             my_file_exacte <<t1 <<","<< t2<< ","<<nb_noeuds<<",";
             my_file_exacte << t3 <<","<<nb_noeuds2<<","<<t4<<",\n";
         }

@@ -100,6 +100,12 @@ class Noeud{
         evalue();
     }
 
+    ~Noeud(){
+        delete[] degres;
+        delete[] solution;
+        delete[] aretes_interdites;
+    }
+
     void afficher(){
         cout << "Evaluation du noeud :" << evaluation <<endl;
         cout << "Solution réalisable :"<<solution_realisable<<endl;
@@ -194,25 +200,22 @@ void insertion_dichotomique(vector<Noeud> &liste, Noeud &n){
     liste.insert(it, n);
 }
 
-void branch_and_bound_profondeur(Noeud &n, int N, Arete* &aretes, double &borne_sup, int &nb_noeuds_explores, 
+void branch_and_bound_profondeur(Noeud* &n, int N, Arete* &aretes, double &borne_sup, int &nb_noeuds_explores, 
                 unordered_set<string> &set){
     nb_noeuds_explores++;
-    vector<int> branchement = sommet_a_separer(N, n);
-    vector<Noeud> liste_noeuds;
+    vector<int> branchement = sommet_a_separer(N, *n);
     for(int a : branchement){
-        Noeud n_fils(n, a);
-        if(n_fils.solution[N-3]!=-1 && set.find(n_fils.hashcode)==set.end() && n_fils.evaluation<borne_sup){
-            set.insert(n_fils.hashcode); 
-            if(n_fils.solution_realisable){
-                borne_sup=n_fils.evaluation;
+        Noeud* n_fils = new Noeud(*n, a);
+        if(n_fils->solution[N-3]!=-1 && set.find(n_fils->hashcode)==set.end() && n_fils->evaluation<borne_sup){
+            set.insert(n_fils->hashcode); 
+            if(n_fils->solution_realisable){
+                borne_sup=n_fils->evaluation;
             }
             else{
-                insertion_dichotomique(liste_noeuds,n_fils);
+                branch_and_bound_profondeur(n_fils, N, aretes, borne_sup, nb_noeuds_explores, set);
             }
         }
-    }
-    for(int i=0;i<liste_noeuds.size();i++){
-        branch_and_bound_profondeur(liste_noeuds.at(i), N, aretes, borne_sup, nb_noeuds_explores, set);
+        delete n_fils;
     }
 }
 
@@ -222,9 +225,9 @@ tuple<double, int> lance_profondeur(int N, Arete* &aretes, double borne_sup=1324
     int nb_noeuds_explores = 0;
     unordered_set<string> set;
     borne_sup+=0.0001;
-    Noeud n(aretes, N, x0);
-    n.evalue();
-    if(n.solution_realisable) borne_sup=n.evaluation;
+    Noeud* n = new Noeud(aretes, N, x0);
+    n->evalue();
+    if(n->solution_realisable) borne_sup=n->evaluation;
     branch_and_bound_profondeur(n, N, aretes, borne_sup, nb_noeuds_explores, set);
     return make_tuple(borne_sup, nb_noeuds_explores);
 }

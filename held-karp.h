@@ -1,29 +1,27 @@
 #ifndef HELD_KARP_H
 #define HELD_KARP_H
 
-#include <bits/stdc++.h>
+#include <vector>
+#include <iostream>
 
 using namespace std;
 
 
-double tsp_dp(int N, double* &graphe, int s) {
-    vector<int> sommets;
-    for (int i = 0; i < N; i++) {
-        if (i != s)
-            sommets.push_back(i);
+double held_karp(int N, double* &graph, int pos, int visited, vector<vector<double>>& state) {
+    if(visited == ((1 << N) - 1))
+        return graph[pos*N]; 
+
+    if(state[pos][visited] != 100000)
+        return state[pos][visited];
+
+    for(int i = 0; i < N; ++i) {
+        if(i == pos || (visited & (1 << i)))
+            continue;
+        int distance = graph[pos*N+i] + held_karp(N, graph, i, visited | (1 << i), state);
+        if(distance < state[pos][visited])
+            state[pos][visited] = distance;
     }
-    double cout_min = 1000000;
-    while(next_permutation(sommets.begin(), sommets.end())) {
-        double cout_courrant = 0;
-        int j = s;
-        for (int i = 0; i < sommets.size(); i++) {
-            cout_courrant += graphe[j*N+sommets[i]];
-            j = sommets[i];
-        }
-        cout_courrant += graphe[j*N+s];
-        cout_min = min(cout_min, cout_courrant);
-        return cout_min;
-	}
+    return state[pos][visited];
 }
 
 #endif
